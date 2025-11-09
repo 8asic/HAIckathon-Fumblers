@@ -32,9 +32,13 @@ share/python-wheels/
 MANIFEST
 
 # Data files
-data/interim/
+prompts/
+data/bias_patterns/
 data/evaluations/
+data/raw/
+data/processed/
 *.csv
+*.json
 *.parquet
 *.feather
 *.pkl
@@ -42,16 +46,6 @@ data/evaluations/
 *.db
 *.sqlite
 *.sqlite3
-
-# Temporary exclusions for hackathon simplicity
-prompts/
-data/bias_patterns/
-data/evaluations/
-tests/unit/test_agents/
-
-# But KEEP these specific data directories
-#!data/bias_patterns/
-!data/demo_articles/
 
 # Logs
 *.log
@@ -104,3 +98,6 @@ secrets/
 credentials/
 
 *.pdf
+
+# Scripts
+openai_client.py
