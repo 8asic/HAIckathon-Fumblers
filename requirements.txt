@@ -1,16 +1,21 @@
-# Core AI & HTTP
-google-generativeai==0.3.0
+# HTTP & Networking
 httpx==0.25.2
+
+# AI Provider dependencies
+google-generativeai==0.3.0
+groq==0.9.0
+anthropic==0.25.0
+openai==1.30.0
 
 # FastAPI & Web
 fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
 
-# Configuration
+# Configuration & Environment
 python-dotenv==1.0.0
-#pydantic==2.4.2
-#pydantic==1.7.4
-#pydantic-settings==2.1.0 # Optional - remove if not needed immediately
 
-# SQLite is built-in to Python
+# Data Validation (FastAPI includes Pydantic)
+# pydantic==2.4.2  # FastAPI 0.104.1 includes compatible Pydantic version
+
+# Database (SQLite is built-in to Python - no extra package needed)

@@ -1,16 +1,16 @@
-# src/services/gemini_client.py
+# src/services/openai_client.py
 
 import json
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from .model_factory import ModelFactory
 
 load_dotenv()
 
 
-class GeminiClient:
-    def __init__(self) -> None:
+class OpenAIClient:
+    def __init__(self):
         self.client, self.model_name, self.provider = ModelFactory.get_model()
 
     def analyze_bias(self, article_text: str) -> Dict[str, Any]:
@@ -20,8 +20,27 @@ class GeminiClient:
         prompt = self._create_bias_analysis_prompt(article_text)
         
         try:
-            response = self.model.generate_content(prompt)
-            result = self._extract_json(response.text)
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are an expert media bias analyst. Always respond with valid JSON."
+                    },
+                    {
+                        "role": "user", 
+                        "content": prompt
+                    }
+                ],
+                temperature=0.1,
+                response_format={"type": "json_object"}
+            )
+            
+            result_text = response.choices[0].message.content
+            if result_text is None:
+                return self._get_fallback_response()
+                
+            result = json.loads(result_text)
             
             if self._validate_response(result):
                 return result
@@ -37,11 +56,11 @@ class GeminiClient:
 
         ARTICLE: {article_text}
 
-        Check for these bias types:
+        Analyze for these bias types:
         1. Emotional language (loaded words, sensationalism, exaggeration)
         2. Framing bias (oversimplification, binary thinking, selective framing)
-        3. Omission of important context or facts
-        4. Partisan or ideological language
+        3. Omission bias (missing context, important facts, alternative views)
+        4. Partisan language (ideological slant, political leaning)
 
         Return JSON with this exact structure:
         {{
@@ -53,32 +72,12 @@ class GeminiClient:
                 {{
                     "text": "exact phrase from article",
                     "bias_type": "emotional/framing/omission/partisan",
-                    "explanation": "why this phrasing is biased"
+                    "explanation": "detailed explanation of why this is biased"
                 }}
             ],
-            "summary": "brief explanation of main biases found"
+            "summary": "comprehensive analysis of main biases found"
         }}
-
-        Return ONLY the JSON object, no additional text.
         """
-
-    def _extract_json(self, text: str) -> Dict[str, Any]:
-        try:
-            cleaned = text.strip().replace('```json', '').replace('```', '').strip()
-            
-            start = cleaned.find('{')
-            end = cleaned.rfind('}') + 1
-            
-            if start == -1 or end == 0:
-                return self._get_fallback_response()
-                
-            json_str = cleaned[start:end]
-            return json.loads(json_str)
-            
-        except json.JSONDecodeError:
-            return self._get_fallback_response()
-        except Exception:
-            return self._get_fallback_response()
 
     def _validate_response(self, response: Dict[str, Any]) -> bool:
         required_fields = [
