@@ -25,10 +25,12 @@ def get_connection_to_news_db():
         date date,
         url TEXT,
         body TEXT,
+        category TEXT,
         bias TEXT,
-        rewritten_article TEXT   
+        rewritten_article TEXT  
     )
     """)
+        conn.commit()
         print("connected to DB succesfully")
     finally:
         conn.close()
@@ -42,8 +44,8 @@ def add_news(db=news_DB,data=data):
     try:
         #retriving data from newsapi and inserting to columns
         cur.executemany(    
-            "INSERT INTO data_news (title, source, date, url, body, bias, rewritten_article) VALUES (?, ?, ?, ?, ?,?, ?)",
-            [(d['title'], d['source'], d['date'], d['url'], d['body'], None, None) for d in data]
+            "INSERT INTO data_news (title, source, date, url, body, category, bias, rewritten_article) VALUES (?, ?, ?, ?, ?, ?,?, ?)",
+            [(d['title'], d['source'], d['date'], d['url'], d['body'], d['category'], None, None) for d in data]
         )
     except sqlite3.Error as er:
         print({f"Error":{er}})
