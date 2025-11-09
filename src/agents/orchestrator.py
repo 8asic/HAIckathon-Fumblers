@@ -40,7 +40,7 @@ class BiasAnalysisOrchestrator:
         tasks = []
         for article in articles:
             task = self.analyze_article(
-                article_text=article.get('content', ''),
+                article_text=article.get('body', ''),  # ← CHANGE 'content' to 'body'
                 original_title=article.get('title', ''),
                 source=article.get('source', 'unknown')
             )

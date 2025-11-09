@@ -117,22 +117,48 @@ class BiasDetector:
         """
     
     def _extract_json(self, text: str) -> Dict[str, Any]:
-        """Extract and parse JSON from model response."""
+        """More robust JSON extraction from LLM responses."""
+        if not text:
+            return self._get_fallback_response()
+        
         try:
-            cleaned = text.strip().replace('```json', '').replace('```', '').strip()
+            # Clean the response text
+            cleaned = text.strip()
             
+            # Remove markdown code blocks if present
+            if cleaned.startswith('```json'):
+                cleaned = cleaned[7:]
+            if cleaned.startswith('```'):
+                cleaned = cleaned[3:]
+            if cleaned.endswith('```'):
+                cleaned = cleaned[:-3]
+            cleaned = cleaned.strip()
+            
+            # Find JSON object
             start = cleaned.find('{')
             end = cleaned.rfind('}') + 1
             
             if start == -1 or end == 0:
+                print(f"No JSON object found in: {cleaned[:100]}...")
                 return self._get_fallback_response()
                 
             json_str = cleaned[start:end]
-            return json.loads(json_str)
+            result = json.loads(json_str)
             
-        except json.JSONDecodeError:
+            # Validate required fields
+            required = ['emotional_bias_score', 'framing_bias_score', 'overall_bias_score']
+            if all(field in result for field in required):
+                return result
+            else:
+                print(f"Missing required fields in: {result}")
+                return self._get_fallback_response()
+                
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            print(f"Problematic text: {text[:200]}...")
             return self._get_fallback_response()
-        except Exception:
+        except Exception as e:
+            print(f"JSON extraction error: {e}")
             return self._get_fallback_response()
 
     def _get_fallback_response(self) -> Dict[str, Any]:

@@ -5,8 +5,8 @@ import sys
 import asyncio
 from dotenv import load_dotenv
 
-# Add project root to path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, project_root)
 
 load_dotenv()
@@ -15,51 +15,55 @@ from src.database.news_db import (
     get_connection_to_news_db, 
     add_news, 
     prepare_data_for_llm,
-    add_bias
+    add_bias,
+    clear_old_articles,
+    get_article_stats
 )
 from src.services.news_client import NewsClient
 
 
-async def test_news_client():
-    """Test the NewsClient fetches articles with categorization."""
-    print("Testing NewsClient...")
+async def test_news_client_with_optional_query():
+    """Test NewsClient with optional query parameter."""
+    print("Testing NewsClient with optional query...")
     
     client = NewsClient()
-    articles = await client.fetch_articles("climate change", 2)
     
-    print(f"SUCCESS: Fetched {len(articles)} articles")
-    for article in articles:
-        print(f"  - '{article['title']}' -> Category: {article['category']}")
+    print("Test 1: Fetch with specific query...")
+    articles1 = await client.fetch_articles("renewable energy", 2)
+    print(f"Fetched {len(articles1)} articles for 'renewable energy'")
     
-    return articles
+    print("Test 2: Fetch with default query...")
+    articles2 = await client.fetch_articles(None, 2)
+    print(f"Fetched {len(articles2)} articles with default query")
+    
+    print("Test 3: Fetch with different query...")
+    articles3 = await client.fetch_articles("climate policy", 2)
+    print(f"Fetched {len(articles3)} articles for 'climate policy'")
+    
+    return articles1 + articles2 + articles3
 
 
 async def test_database_operations():
-    """Test database creation and operations."""
-    print("\nTesting Database Operations...")
+    """Test database operations with fresh articles."""
+    print("Testing Database Operations...")
     
-    # 1. Create database and table
     get_connection_to_news_db()
-    print("SUCCESS: Database created")
+    print("Database created")
     
-    # 2. Add news to database
-    articles = await test_news_client()
+    clear_old_articles(days_old=0)
+    
+    articles = await test_news_client_with_optional_query()
     add_news(data=articles)
-    print("SUCCESS: Articles added to database")
+    print("Articles added to database")
     
-    # 3. Prepare data for LLM
-    llm_articles = prepare_data_for_llm()
+    llm_articles = prepare_data_for_llm(limit=10, processed_only=True)
     
-    # Handle potential None return from prepare_data_for_llm()
     if not llm_articles:
-        print("WARNING: No articles prepared for LLM - database may be empty")
+        print("No articles prepared for LLM")
         return False
     
-    print(f"SUCCESS: Prepared {len(llm_articles)} articles for LLM")
-    for article in llm_articles:
-        print(f"  - '{article['title']}'")
+    print(f"Prepared {len(llm_articles)} articles for LLM")
     
-    # 4. Test adding bias analysis (mock data)
     if llm_articles:
         mock_bias_data = [
             {
@@ -69,32 +73,26 @@ async def test_database_operations():
             }
         ]
         add_bias(mock_bias_data)
-        print("SUCCESS: Added mock bias analysis to database")
+        print("Added mock bias analysis to database")
     
     return True
 
 
 def check_database_file():
-    """Check if database file was created in correct location."""
-    print("\nChecking Database File Location...")
+    """Check database file location and structure."""
+    print("Checking Database File Location...")
     
     db_path = "data/databases/news.db"
     if os.path.exists(db_path):
-        print(f"SUCCESS: Database file created at: {os.path.abspath(db_path)}")
-        
-        # Check file size
+        print(f"Database file created at: {os.path.abspath(db_path)}")
         size = os.path.getsize(db_path)
-        print(f"  File size: {size} bytes")
+        print(f"File size: {size} bytes")
     else:
-        print(f"FAILED: Database file not found at: {os.path.abspath(db_path)}")
-        
-    # Check data directory structure
-    data_dir = "data"
-    databases_dir = "data/databases"
+        print(f"Database file not found at: {os.path.abspath(db_path)}")
     
-    print(f"\nDirectory Structure:")
-    print(f"  data/ exists: {os.path.exists(data_dir)}")
-    print(f"  data/databases/ exists: {os.path.exists(databases_dir)}")
+    print("Directory Structure:")
+    print(f"  data/ exists: {os.path.exists('data')}")
+    print(f"  data/databases/ exists: {os.path.exists('data/databases')}")
 
 
 async def main():
@@ -102,7 +100,6 @@ async def main():
     print("Testing NewsClient + Database Integration")
     print("=" * 50)
     
-    # Check environment
     required_vars = ['NEWSAPI_AI_KEY', 'NEWS_API_KEY']
     print("Environment Check:")
     for var in required_vars:
@@ -111,15 +108,14 @@ async def main():
         else:
             print(f"  MISSING: {var}")
     
-    # Run tests
     try:
-        # Test Database operations (this includes NewsClient test)
         db_success = await test_database_operations()
         
-        # Check file locations
         check_database_file()
         
-        print("\n" + "=" * 50)
+        get_article_stats()
+        
+        print("=" * 50)
         if db_success:
             print("ALL TESTS PASSED: Integration working correctly")
         else:
