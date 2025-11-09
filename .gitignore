@@ -1,0 +1,106 @@
+# Environment
+.env
+.env.local
+.env.production
+.venv
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+s3cmd/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Data files
+data/interim/
+data/evaluations/
+*.csv
+*.parquet
+*.feather
+*.pkl
+*.pickle
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary exclusions for hackathon simplicity
+prompts/
+data/bias_patterns/
+data/evaluations/
+tests/unit/test_agents/
+
+# But KEEP these specific data directories
+#!data/bias_patterns/
+!data/demo_articles/
+
+# Logs
+*.log
+logs/
+mlruns/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+temp/
+tmp/
+
+# Lovable/frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# API keys (double protection)
+*_key.txt
+*_keys.json
+secrets/
+credentials/
+
+*.pdf

@@ -1,0 +1,15 @@
+[project]
+name = "HAIckathon-Fumblers"
+version = "0.1.0"
+description = "Agentic AI for detecting and neutralizing news bias"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[tool.pytest]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
